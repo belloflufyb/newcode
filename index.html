@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart City KPI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        optgroup {
+            font-weight: bold;
+            font-style: italic;
+            color: #1a56db;
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 60vh;
+            width: 80vw;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <!-- Header คงที่: โลโก้ 250×45px + ชื่อเว็บ -->
+    <header class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="relative block w-[250px] h-[45px] overflow-hidden">
+                    <!-- ใส่โลโก้ของคุณที่นี่ (ขนาดแนะนำ 250x45px) -->
+                    <img src="https://raw.githubusercontent.com/belloflufyb/my-web/main/logo.png" alt="Smart City Logo"
+                        class="w-[250px] h-[45px] object-contain" />
+                </div>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">
+                    แพลตฟอร์มข้อมูลเปิดระดับการของการพัฒนาทุนของเมือง</h1>
+            </div>
+            <div class="hidden md:flex items-center gap-2 text-sm text-gray-500">
+                <span class="px-2 py-1 bg-gray-100 rounded-md">Smart & Livable Cities</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 space-y-10">
+        <!-- ===== Section A: CSV-based (เรดาร์ 1 เมือง + บาร์ 1 KPI) ===== -->
+        <section id="sectionA" class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-700 mb-2 text-center">📊
+                แพลตฟอร์มข้อมูลเปิดระดับการของการพัฒนาทุนของเมือง
+            </h2>
+            <p class="text-center text-gray-500 mb-8">วิเคราะห์ภาพรวมและเปรียบเทียบข้อมูลรายด้านของแต่ละเทศบาล </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Left Column: Radar Chart -->
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-bold text-center mb-4">ภาพรวมศักยภาพ (Radar Chart)</h3>
+                    <div class="mb-4">
+                        <label for="municipality-selector-a"
+                            class="block mb-2 text-sm font-medium text-gray-900">เลือกเทศบาล:</label>
+                        <select id="municipality-selector-a"
+                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                    </div>
+                    <div class="w-full h-[50vh]"><canvas id="radarChartA"></canvas></div>
+                </div>
+
+                <!-- Right Column: Bar Chart -->
+                <div class="bg-gray-50 p-4 rounded-xl">
+                    <h3 class="text-lg font-bold text-center mb-4">เปรียบเทียบรายด้าน (Bar Chart)</h3>
+                    <div class="mb-4">
+                        <label for="kpi-selector-a" class="block mb-2 text-sm font-medium text-gray-900">เลือกตัวชี้วัด
+                            (KPI):</label>
+                        <select id="kpi-selector-a"
+                            class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></select>
+                    </div>
+                    <div class="w-full h-[50vh]"><canvas id="barChartA"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== Section B: Multi-city (สรุป/เรดาร์หลายเมือง/เปรียบเทียบ) ===== -->
+        <section id="sectionB" class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <header class="text-center mb-8">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">แดชบอร์ดเปรียบเทียบตัวชี้วัดเมือง
+                </h2>
+                <p class="text-gray-600 mt-2">สำรวจและเปรียบเทียบประสิทธิภาพของเมืองต่าง ๆ ผ่านตัวชี้วัดที่สำคัญ (คะแนน
+                    1–5)</p>
+            </header>
+
+            <!-- Summary Section -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">สรุปภาพรวมรายตัวชี้วัด (KPI)</h3>
+                <div class="flex justify-center mb-6">
+                    <select id="summary-category-select"
+                        class="w-full max-w-md p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="GEO">ด้านภูมิศาสตร์และสิ่งแวดล้อม</option>
+                        <option value="INF">ด้านโครงสร้างพื้นฐาน</option>
+                        <option value="PPL">ด้านสังคมและผู้คน</option>
+                    </select>
+                </div>
+                <div id="summary-charts-container" class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-8"></div>
+            </div>
+
+            <!-- Single/Multi City Radar -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">ภาพรวมข้อมูลรายเมือง (เลือกได้หลายเมือง)</h3>
+                <div id="city-selection-container"
+                    class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4 max-h-48 overflow-y-auto p-3 border rounded-lg bg-gray-50">
+                </div>
+                <div class="text-center mb-6">
+                    <button id="clear-radar-selection-btn"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">ล้างค่า</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container mx-auto" style="max-width: 450px;">
+                        <canvas id="radar-chart"></canvas>
+                    </div>
+                    <div id="kpi-details-wrapper">
+                        <div id="kpi-details" class="max-h-[60vh] overflow-y-auto pr-2"></div>
+                        <div id="kpi-details-placeholder"
+                            class="hidden text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">เลือก 1
+                            เมืองเพื่อดูรายละเอียดรายตัวชี้วัด</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Comparison -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h3 class="text-2xl font-bold mb-4 text-center">เปรียบเทียบระหว่างเมือง (รายตัวชี้วัด)</h3>
+                <div id="comparison-city-selection-container"
+                    class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4 max-h-48 overflow-y-auto p-3 border rounded-lg bg-gray-50">
+                </div>
+                <div class="text-center mb-6">
+                    <button id="clear-comparison-selection-btn"
+                        class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">ล้างค่า</button>
+                </div>
+                <div id="comparison-charts" class="space-y-6"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== Scripts รวมและแก้ไวยากรณ์ให้ทำงานได้ทันที ===== -->
+    <script>
+        // ========== SECTION A (CSV) ==========
+        (function sectionA() {
+            const csvData = `Code,KPI Name_TH,Unit/Definition (short)_TH,Unit/Definition (short),Unit/Definition (short)_TH,ลำปาง,ลำพูน,นนทบุรี,ปากเกร็ด,ทุ่งสง,พนัสนิคม,ศรีสะเกษ,สกลนคร,กาฬสินธุ์,ร้อยเอ็ด,สระบุรี,เชียงราย,พิษณุโลก,แพร่,ชุมพร,นครสววรค์,แม่เหียะ,นครศรีธรรมราช
+GEO1,พื้นที่ร่มไม้,ร้อยละ,% land area under canopy,ร้อยละ,15.82,21.43,3.25,4.68,18.63,42.56,45.77,71.56,8.14,6.57,16.4,28.79,0.47,8.22,42.88,16.54,30.29,20.1
+GEO2,การเข้าถึงสวนสาธารณะ/น้ำ,ร้อยละ,% pop ≤300m to park/blue,ร้อยละ,40.71,40.96,9.39,16.42,18.62,18.87,29.46,21.59,34.46,18.66,1.73,3.17,20.86,34.84,11.97,18,74.64,2.56
+GEO3,การเผชิญน้ำท่วม,ร้อยละ,% pop in 100-yr floodplain,ร้อยละ,7.34,8.76,2.41,0.82,0,0,4.95,4.12,0,0,15.34,9.98,4.44,0.79,6.52,13.77,11.09,9.36
+GEO4,วันที่ร้อนจัด,วัน/ปี,# days > heat threshold/yr,วัน/ปี,61,71,35,37,63,23,56,60,60,59,54,25,49,62,45,75,71,45
+GEO5,เสี่ยงดินถล่ม/แผ่นดินไหว,ร้อยละ,% land in med-high class,ร้อยละ,0,0,0,0,1.07,0,0,0,0,0,0,0.46,0,0,0,0.78,4.1,0
+GEO6,เวลาเดินทางไปท่าเรือน้ำลึก,ชั่วโมง,truck hours (typical),ชั่วโมง,10.25,11.28,2.8,2.95,2.9,1.28,7.92,10.68,8.65,8.25,3.5,17.2,7.32,9.18,8.83,5.5,11.73,2.42
+GEO7,ระยะทางถึงสนามบินนานาชาติ,กม.,Distance to international airport,กม.,101,30.7,8.2,17.1,70.6,64.9,69.8,228,88.3,122,90,191,353,202,167,222,5.1,18.9
+GEO8,ความหนาแน่นของมรดกวัฒนธรรม,แห่ง/หมื่นคน,Cultural asset density,แห่ง/หมื่นคน,1.17,4.26,0,0,0,0,4.61,0.78,0,4.46,0,1.03,4.2,6.68,0,4.91,6.66,0
+INF1,การเข้าถึงน้ำประปา,ร้อยละ,% households,ร้อยละ,75.9,93.5,99,99,90,95,95,99,95,95,95,99,95,95,95,95,85,95
+INF2,การเข้าถึงระบบขนส่งสาธารณะ,ร้อยละ,% pop ≤500m frequent PT,ร้อยละ,3.19,11.11,0,0,4.29,0,4.26,2.3,2.64,2.19,2.02,0,2.73,5.09,1.23,1.07,0,0.6
+INF3,ความปลอดภัยบนถนน,จำนวนผู้เสียชีวิตจากอุบัติเหตุ /100k,Road fatalities/100k,คน/แสนคน,10,4,24,30,1,4,5,23,2,10,9,31,25,5,8,3,9,13
+INF4,จำนวนเตียงโรงพยาบาล,เตียง/1000 ประชากร,beds per 1000 pop,เตียง/1000 ประชากร,711,440,665,87,372,220,853,907,570,881,700,821,1020,535,548,749,750,870
+PPL1,อัตราพึ่งพิง,(เด็ก+ผู้สูงอายุ)/วัยแรงงาน,(0–14+65+)/15–64,(เด็ก+ผู้สูงอายุ)/วัยแรงงาน,0.416,0.576,0.583,0.639,0.479,0.583,0.574,0,0,0.533,0.553,0.603,0.684,0.653,0.576,0.524,0.639
+PPL2,การมีส่วนร่วมแรงงาน,% ประชากรวัยแรงงานเข้าตลาดแรงงาน,% working-age in labour force, ร้อยละประชากรวัยแรงงานเข้าตลาดแรงงาน,63.8,73.1,70.8,70.8,65.5,74,71.9,69.3,74,76.9,70.1,73.2,74.5,69.6,73,77,71.2,65.5
+PPL3,การศึกษาของแรงงาน,แรงงานจบมัธยมปลายขึ้นไป,(% workforce with upper-sec+),% ประชากรวัยแรงงานเข้าตลาดแรงงาน,48,46,68,62,52,42,40,40,38,38,56,55,55,50,47,54,62,53
+PPL4,การจ้างงานนอกระบบ,% แรงงานในงานนอกระบบ,% workers informal,ร้อยละแรงงานในงานนอกระบบ,63.8,73.1,70.8,70.8,65.2,75.1,68.4,65.7,67.1,67.5,72.4,69.1,70.2,66.4,71.2,70.5,73.1,65.2
+PPL5,ผลิตภาพแรงงาน,GPP ต่อแรงงาน,currency per worker,GPP ต่อแรงงาน,180207,375595,93754,359977,194565,524002,93754,111338,117416,108788,499398,177117,223594,153831,250654,198213,250771,194565
+PPL6,สัดส่วนรายได้ท้องถิ่น,% รายได้เทศบาล / รายได้รวม,% working-age in labour force,% ประชากรวัยแรงงานเข้าตลาดแรงงาน,0.094167042,0.093531143,0.074715381,0.057617331,0.057617331,0.046543691,0.121434906,0.113938012,0.094132315,0.087913754,0.060719185,0.086343935,0.109406252,0.045699205,0.132231863,0.091891721,0.107692308,0.073204678`;
+
+            let kpiDataA, municipalitiesA; let radarA, barA;
+
+            function processDataA() {
+                const lines = csvData.trim().split('\n');
+                municipalitiesA = lines[0].split(',').slice(5);
+                kpiDataA = lines.slice(1).map(line => {
+                    const cols = line.split(',');
+                    const values = cols.slice(5).map(v => parseFloat(v) || 0);
+                    return { code: cols[0], name: cols[1], unit: cols[2].replace(/"/g, ''), values };
+                });
+                const lowerIsBetter = ['GEO3', 'GEO4', 'GEO5', 'GEO6', 'GEO7', 'INF3', 'PPL1', 'PPL4'];
+                kpiDataA.forEach(k => {
+                    const vals = k.values; const min = Math.min(...vals); const max = Math.max(...vals);
+                    k.normalizedValues = vals.map(v => {
+                        if (max === min) return 50; let n = ((v - min) / (max - min)) * 100; return lowerIsBetter.includes(k.code) ? 100 - n : n;
+                    });
+                });
+            }
+
+            function setupSelectorsA() {
+                const muniSel = document.getElementById('municipality-selector-a');
+                municipalitiesA.forEach((m, i) => { const opt = document.createElement('option'); opt.value = i; opt.textContent = m; muniSel.appendChild(opt); });
+
+                const kpiSel = document.getElementById('kpi-selector-a');
+                const categoryMap = { 'GEO': 'ภูมิศาสตร์และสิ่งแวดล้อม', 'INF': 'โครงสร้างพื้นฐาน', 'PPL': 'ด้านประชากร' };
+                const grouped = {};
+                kpiDataA.forEach((k, i) => { const cat = k.code.replace(/[0-9]/g, ''); const name = categoryMap[cat]; if (name) { (grouped[name] ||= []).push({ ...k, idx: i }); } });
+                for (const name in grouped) { const og = document.createElement('optgroup'); og.label = `--- ${name} ---`; grouped[name].forEach(k => { const o = document.createElement('option'); o.value = k.idx; o.textContent = k.name; og.appendChild(o); }); kpiSel.appendChild(og); }
+            }
+
+            function makeRadarA(idx) {
+                const ctx = document.getElementById('radarChartA').getContext('2d');
+                radarA?.destroy();
+                radarA = new Chart(ctx, {
+                    type: 'radar',
+                    data: { labels: kpiDataA.map(k => k.code), datasets: [{ label: municipalitiesA[idx], data: kpiDataA.map(k => k.normalizedValues[idx]), originalData: kpiDataA.map(k => ({ value: k.values[idx], unit: k.unit, name: k.name })), fill: true, backgroundColor: 'rgba(54,162,235,0.2)', borderColor: 'rgb(54,162,235)', pointBackgroundColor: 'rgb(54,162,235)' }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 100, pointLabels: { font: { size: 10 } }, ticks: { stepSize: 20 } } }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (c) => { const o = c.dataset.originalData[c.dataIndex]; return `${o.name}: ${o.value.toLocaleString()} ${o.unit}`; } } } } }
+                });
+            }
+
+            function makeBarA(kpiIdx) {
+                const ctx = document.getElementById('barChartA').getContext('2d');
+                const k = kpiDataA[kpiIdx];
+                let combo = municipalitiesA.map((lab, i) => ({ label: lab, value: k.values[i] })).sort((a, b) => b.value - a.value);
+                barA?.destroy();
+                barA = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: combo.map(d => d.label), datasets: [{ label: k.name, data: combo.map(d => d.value), backgroundColor: 'rgba(255,99,132,0.5)', borderColor: 'rgb(255,99,132)', borderWidth: 1, borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { y: { ticks: { font: { size: 10 } } } }, plugins: { legend: { display: false }, title: { display: true, text: k.name }, tooltip: { callbacks: { label: (c) => `${c.parsed.x.toLocaleString()} ${k.unit}` } } } }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                processDataA();
+                setupSelectorsA();
+                const mSel = document.getElementById('municipality-selector-a');
+                const kSel = document.getElementById('kpi-selector-a');
+                mSel.addEventListener('change', e => makeRadarA(e.target.value));
+                kSel.addEventListener('change', e => makeBarA(e.target.value));
+                makeRadarA(mSel.value || 0);
+                makeBarA(kSel.value || 0);
+            });
+        })();
+
+        // ========== SECTION B (คะแนน 1–5) ==========
+        (function sectionB() {
+            const kpiData = [
+                { "Code": "GEO1", "KPI Name_TH": "พื้นที่ร่มไม้", "ลำปาง": 1, "ลำพูน": 2, "นนทบุรี": 1, "ปากเกร็ด": 1, "ทุ่งสง": 1, "พนัสนิคม": 3, "ศรีสะเกษ": 3, "สกลนคร": 4, "กาฬสินธุ์": 1, "ร้อยเอ็ด": 1, "สระบุรี": 1, "เชียงราย": 2, "พิษณุโลก": 1, "แพร่": 1, "ชุมพร": 3, "นครสววรค์": 1, "แม่เหียะ": 2, "นครศรีธรรมราช": 1 },
+                { "Code": "GEO2", "KPI Name_TH": "การเข้าถึงสวนสาธารณะ/น้ำ", "ลำปาง": 2, "ลำพูน": 2, "นนทบุรี": 1, "ปากเกร็ด": 2, "ทุ่งสง": 1, "พนัสนิคม": 1, "ศรีสะเกษ": 2, "สกลนคร": 2, "กาฬสินธุ์": 2, "ร้อยเอ็ด": 1, "สระบุรี": 1, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 2, "ชุมพร": 1, "นครสววรค์": 1, "แม่เหียะ": 4, "นครศรีธรรมราช": 1 },
+                { "Code": "GEO3", "KPI Name_TH": "การเผชิญน้ำท่วม", "ลำปาง": 5, "ลำพูน": 5, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 5, "พนัสนิคม": 5, "ศรีสะเกษ": 5, "สกลนคร": 5, "กาฬสินธุ์": 5, "ร้อยเอ็ด": 5, "สระบุรี": 5, "เชียงราย": 5, "พิษณุโลก": 5, "แพร่": 5, "ชุมพร": 5, "นครสววรค์": 5, "แม่เหียะ": 5, "นครศรีธรรมราช": 5 },
+                { "Code": "GEO4", "KPI Name_TH": "วันที่ร้อนจัด", "ลำปาง": 2, "ลำพูน": 1, "นนทบุรี": 4, "ปากเกร็ด": 4, "ทุ่งสง": 2, "พนัสนิคม": 5, "ศรีสะเกษ": 2, "สกลนคร": 2, "กาฬสินธุ์": 2, "ร้อยเอ็ด": 2, "สระบุรี": 2, "เชียงราย": 5, "พิษณุโลก": 3, "แพร่": 2, "ชุมพร": 3, "นครสววรค์": 1, "แม่เหียะ": 1, "นครศรีธรรมราช": 3 },
+                { "Code": "GEO5", "KPI Name_TH": "เสี่ยงดินถล่ม/แผ่นดินไหว", "ลำปาง": 1, "ลำพูน": 1, "นนทบุรี": 1, "ปากเกร็ด": 1, "ทุ่งสง": 1, "พนัสนิคม": 1, "ศรีสะเกษ": 1, "สกลนคร": 1, "กาฬสินธุ์": 1, "ร้อยเอ็ด": 1, "สระบุรี": 1, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 1, "ชุมพร": 1, "นครสววรค์": 1, "แม่เหียะ": 1, "นครศรีธรรมราช": 1 },
+                { "Code": "GEO6", "KPI Name_TH": "เวลาเดินทางไปท่าเรือน้ำลึก", "ลำปาง": 3, "ลำพูน": 2, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 5, "พนัสนิคม": 5, "ศรีสะเกษ": 3, "สกลนคร": 3, "กาฬสินธุ์": 3, "ร้อยเอ็ด": 3, "สระบุรี": 5, "เชียงราย": 1, "พิษณุโลก": 4, "แพร่": 3, "ชุมพร": 3, "นครสววรค์": 4, "แม่เหียะ": 2, "นครศรีธรรมราช": 5 },
+                { "Code": "GEO7", "KPI Name_TH": "การเดินทางไปสนามบิน", "ลำปาง": 3, "ลำพูน": 4, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 4, "พนัสนิคม": 3, "ศรีสะเกษ": 3, "สกลนคร": 1, "กาฬสินธุ์": 2, "ร้อยเอ็ด": 3, "สระบุรี": 2, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 2, "ชุมพร": 2, "นครสววรค์": 2, "แม่เหียะ": 5, "นครศรีธรรมราช": 5 },
+                { "Code": "GEO8", "KPI Name_TH": "ความหนาแน่นของมรดกวัฒนธรรม", "ลำปาง": 1, "ลำพูน": 1, "นนทบุรี": 1, "ปากเกร็ด": 1, "ทุ่งสง": 1, "พนัสนิคม": 1, "ศรีสะเกษ": 1, "สกลนคร": 1, "กาฬสินธุ์": 1, "ร้อยเอ็ด": 1, "สระบุรี": 1, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 1, "ชุมพร": 1, "นครสววรค์": 1, "แม่เหียะ": 1, "นครศรีธรรมราช": 1 },
+                { "Code": "INF1", "KPI Name_TH": "การเข้าถึงน้ำประปา", "ลำปาง": 4, "ลำพูน": 5, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 5, "พนัสนิคม": 5, "ศรีสะเกษ": 5, "สกลนคร": 5, "กาฬสินธุ์": 5, "ร้อยเอ็ด": 5, "สระบุรี": 5, "เชียงราย": 5, "พิษณุโลก": 5, "แพร่": 5, "ชุมพร": 5, "นครสววรค์": 5, "แม่เหียะ": 5, "นครศรีธรรมราช": 5 },
+                { "Code": "INF2", "KPI Name_TH": "การเข้าถึงระบบขนส่งสาธารณะ", "ลำปาง": 1, "ลำพูน": 1, "นนทบุรี": 1, "ปากเกร็ด": 1, "ทุ่งสง": 1, "พนัสนิคม": 1, "ศรีสะเกษ": 1, "สกลนคร": 1, "กาฬสินธุ์": 1, "ร้อยเอ็ด": 1, "สระบุรี": 1, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 1, "ชุมพร": 1, "นครสววรค์": 1, "แม่เหียะ": 1, "นครศรีธรรมราช": 1 },
+                { "Code": "INF3", "KPI Name_TH": "ความปลอดภัยบนถนน", "ลำปาง": 4, "ลำพูน": 5, "นนทบุรี": 2, "ปากเกร็ด": 1, "ทุ่งสง": 5, "พนัสนิคม": 5, "ศรีสะเกษ": 5, "สกลนคร": 2, "กาฬสินธุ์": 5, "ร้อยเอ็ด": 4, "สระบุรี": 4, "เชียงราย": 1, "พิษณุโลก": 1, "แพร่": 5, "ชุมพร": 4, "นครสววรค์": 5, "แม่เหียะ": 4, "นครศรีธรรมราช": 3 },
+                { "Code": "INF4", "KPI Name_TH": "จำนวนเตียงโรงพยาบาล", "ลำปาง": 4, "ลำพูน": 2, "นนทบุรี": 2, "ปากเกร็ด": 1, "ทุ่งสง": 3, "พนัสนิคม": 2, "ศรีสะเกษ": 2, "สกลนคร": 3, "กาฬสินธุ์": 2, "ร้อยเอ็ด": 3, "สระบุรี": 2, "เชียงราย": 3, "พิษณุโลก": 4, "แพร่": 4, "ชุมพร": 3, "นครสววรค์": 3, "แม่เหียะ": 1, "นครศรีธรรมราช": 3 },
+                { "Code": "PPL1", "KPI Name_TH": "อัตราพึ่งพิง", "ลำปาง": 3, "ลำพูน": 4, "นนทบุรี": 2, "ปากเกร็ด": 2, "ทุ่งสง": 3, "พนัสนิคม": 4, "ศรีสะเกษ": 3, "สกลนคร": 4, "กาฬสินธุ์": 3, "ร้อยเอ็ด": 2, "สระบุรี": 3, "เชียงราย": 4, "พิษณุโลก": 3, "แพร่": 4, "ชุมพร": 3, "นครสววรค์": 2, "แม่เหียะ": 5, "นครศรีธรรมราช": 3 },
+                { "Code": "PPL2", "KPI Name_TH": "การมีส่วนร่วมแรงงาน", "ลำปาง": 2, "ลำพูน": 3, "นนทบุรี": 4, "ปากเกร็ด": 4, "ทุ่งสง": 2, "พนัสนิคม": 3, "ศรีสะเกษ": 2, "สกลนคร": 2, "กาฬสินธุ์": 2, "ร้อยเอ็ด": 3, "สระบุรี": 3, "เชียงราย": 3, "พิษณุโลก": 4, "แพร่": 2, "ชุมพร": 3, "นครสววรค์": 4, "แม่เหียะ": 1, "นครศรีธรรมราช": 3 },
+                { "Code": "PPL3", "KPI Name_TH": "การศึกษาของแรงงาน", "ลำปาง": 4, "ลำพูน": 4, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 3, "พนัสนิคม": 4, "ศรีสะเกษ": 3, "สกลนคร": 4, "กาฬสินธุ์": 3, "ร้อยเอ็ด": 4, "สระบุรี": 4, "เชียงราย": 5, "พิษณุโลก": 5, "แพร่": 4, "ชุมพร": 3, "นครสววรค์": 5, "แม่เหียะ": 4, "นครศรีธรรมราช": 4 },
+                { "Code": "PPL4", "KPI Name_TH": "การจ้างงานนอกระบบ", "ลำปาง": 4, "ลำพูน": 5, "นนทบุรี": 3, "ปากเกร็ด": 3, "ทุ่งสง": 4, "พนัสนิคม": 5, "ศรีสะเกษ": 4, "สกลนคร": 3, "กาฬสินธุ์": 4, "ร้อยเอ็ด": 4, "สระบุรี": 3, "เชียงราย": 5, "พิษณุโลก": 4, "แพร่": 5, "ชุมพร": 4, "นครสววรค์": 3, "แม่เหียะ": 5, "นครศรีธรรมราช": 4 },
+                { "Code": "PPL5", "KPI Name_TH": "ผลิตภาพแรงงาน", "ลำปาง": 3, "ลำพูน": 4, "นนทบุรี": 3, "ปากเกร็ด": 3, "ทุ่งสง": 4, "พนัสนิคม": 4, "ศรีสะเกษ": 3, "สกลนคร": 4, "กาฬสินธุ์": 3, "ร้อยเอ็ด": 3, "สระบุรี": 4, "เชียงราย": 4, "พิษณุโลก": 3, "แพร่": 4, "ชุมพร": 4, "นครสววรค์": 3, "แม่เหียะ": 5, "นครศรีธรรมราช": 3 },
+                { "Code": "PPL6", "KPI Name_TH": "สัดส่วนรายได้ท้องถิ่น", "ลำปาง": 4, "ลำพูน": 4, "นนทบุรี": 5, "ปากเกร็ด": 5, "ทุ่งสง": 3, "พนัสนิคม": 4, "ศรีสะเกษ": 3, "สกลนคร": 3, "กาฬสินธุ์": 3, "ร้อยเอ็ด": 4, "สระบุรี": 4, "เชียงราย": 5, "พิษณุโลก": 5, "แพร่": 4, "ชุมพร": 3, "นครสววรค์": 5, "แม่เหียะ": 5, "นครศรีธรรมราช": 4 }
+            ];
+
+            const cityNames = Object.keys(kpiData[0]).filter(key => !["Code", "KPI Name_TH"].includes(key));
+            const kpiDetailsContainer = document.getElementById('kpi-details');
+            const kpiDetailsPlaceholder = document.getElementById('kpi-details-placeholder');
+            const comparisonChartsContainer = document.getElementById('comparison-charts');
+            const radarCtx = document.getElementById('radar-chart').getContext('2d');
+            const citySelectionContainer = document.getElementById('city-selection-container');
+            const comparisonCitySelectionContainer = document.getElementById('comparison-city-selection-container');
+            const summaryCategorySelect = document.getElementById('summary-category-select');
+            const summaryChartsContainer = document.getElementById('summary-charts-container');
+            const clearRadarSelectionBtn = document.getElementById('clear-radar-selection-btn');
+            const clearComparisonSelectionBtn = document.getElementById('clear-comparison-selection-btn');
+            let radarChart;
+
+            const chartColors = [
+                'rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)',
+                'rgba(255, 206, 86, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                'rgba(201, 203, 207, 1)', 'rgba(50, 205, 50, 1)', 'rgba(218, 112, 214, 1)',
+                'rgba(0, 191, 255, 1)', 'rgba(255, 20, 147, 1)', 'rgba(255, 69, 0, 1)',
+                'rgba(138, 43, 226, 1)', 'rgba(0, 255, 127, 1)', 'rgba(210, 105, 30, 1)',
+                'rgba(127, 255, 0, 1)', 'rgba(106, 90, 205, 1)', 'rgba(255, 105, 180, 1)'
+            ];
+
+            function populateSelectors() {
+                cityNames.forEach((city, index) => {
+                    const radarCheckboxId = `radar-city-checkbox-${index}`;
+                    const comparisonCheckboxId = `comparison-city-checkbox-${index}`;
+                    const checkboxHTML = `
+            <div class="flex items-center">
+              <input id="${radarCheckboxId}" type="checkbox" value="${city}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 radar-checkbox">
+              <label for="${radarCheckboxId}" class="ml-2 text-sm font-medium text-gray-900">${city}</label>
+            </div>`;
+                    const comparisonCheckboxHTML = `
+            <div class="flex items-center">
+              <input id="${comparisonCheckboxId}" type="checkbox" value="${city}" class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 comparison-checkbox">
+              <label for="${comparisonCheckboxId}" class="ml-2 text-sm font-medium text-gray-900">${city}</label>
+            </div>`;
+                    citySelectionContainer.insertAdjacentHTML('beforeend', checkboxHTML);
+                    comparisonCitySelectionContainer.insertAdjacentHTML('beforeend', comparisonCheckboxHTML);
+                });
+            }
+
+            function getScoreColor(score) { if (score >= 4) return 'bg-green-100 text-green-800'; if (score >= 3) return 'bg-yellow-100 text-yellow-800'; if (score >= 2) return 'bg-orange-100 text-orange-800'; return 'bg-red-100 text-red-800'; }
+            function getBarColor(score) { if (score >= 4) return 'rgba(74, 222, 128, 0.7)'; if (score >= 3) return 'rgba(250, 204, 21, 0.7)'; if (score >= 2) return 'rgba(251, 146, 60, 0.7)'; return 'rgba(239, 68, 68, 0.7)'; }
+
+            function updateSummaryCharts() {
+                const selectedCategory = summaryCategorySelect.value; summaryChartsContainer.innerHTML = '';
+                const data = kpiData.filter(kpi => kpi.Code.startsWith(selectedCategory));
+                data.forEach(kpi => {
+                    const chartContainer = document.createElement('div');
+                    chartContainer.className = 'border p-4 rounded-lg bg-gray-50';
+                    chartContainer.innerHTML = `<h4 class="font-semibold text-center mb-2 text-sm">${kpi.Code}: ${kpi['KPI Name_TH']}</h4><div style="height: 450px;"><canvas></canvas></div>`;
+                    summaryChartsContainer.appendChild(chartContainer);
+
+                    const cityScores = cityNames.map(city => ({ city, score: kpi[city] })).sort((a, b) => b.score - a.score);
+                    const sortedLabels = cityScores.map(item => item.city);
+                    const sortedData = cityScores.map(item => item.score);
+                    const backgroundColors = sortedData.map(score => getBarColor(score));
+
+                    new Chart(chartContainer.querySelector('canvas').getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: sortedLabels, datasets: [{ label: 'คะแนน', data: sortedData, backgroundColor: backgroundColors }] },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                    });
+                });
+            }
+
+            function updateRadarDashboard() {
+                const selectedCities = Array.from(document.querySelectorAll('.radar-checkbox:checked')).map(cb => cb.value);
+                const datasets = selectedCities.map((city, index) => {
+                    const color = chartColors[index % chartColors.length];
+                    return { label: city, data: kpiData.map(kpi => kpi[city]), backgroundColor: color.replace('1)', '0.2)'), borderColor: color, borderWidth: 2, pointBackgroundColor: color };
+                });
+
+                radarChart?.destroy();
+                radarChart = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: { labels: kpiData.map(kpi => kpi.Code), datasets },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { display: true }, suggestedMin: 0, suggestedMax: 5, pointLabels: { font: { size: 10 } }, ticks: { stepSize: 1 } } }, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (c) => `${c.dataset.label} - ${kpiData[c.dataIndex]['KPI Name_TH']}: ${c.formattedValue}` } } } }
+                });
+
+                if (selectedCities.length === 1) {
+                    kpiDetailsContainer.style.display = 'block'; kpiDetailsPlaceholder.style.display = 'none';
+                    const selectedCity = selectedCities[0]; kpiDetailsContainer.innerHTML = '';
+                    kpiData.forEach(kpi => {
+                        const score = kpi[selectedCity]; const colorClasses = getScoreColor(score);
+                        kpiDetailsContainer.insertAdjacentHTML('beforeend', `<div class="p-3 rounded-lg flex justify-between items-center mb-2 ${colorClasses}"><div><p class="font-bold">${kpi.Code}</p><p class="text-sm">${kpi['KPI Name_TH']}</p></div><div class="text-2xl font-bold">${score}</div></div>`);
+                    });
+                } else {
+                    kpiDetailsContainer.style.display = 'none'; kpiDetailsPlaceholder.style.display = 'block';
+                }
+            }
+
+            function updateMultiCityComparison() {
+                const selectedCities = Array.from(document.querySelectorAll('.comparison-checkbox:checked')).map(cb => cb.value);
+                comparisonChartsContainer.innerHTML = '';
+                if (selectedCities.length < 2) {
+                    comparisonChartsContainer.innerHTML = '<p class="text-center text-gray-600">กรุณาเลือกอย่างน้อย 2 เมืองเพื่อเปรียบเทียบ</p>';
+                    return;
+                }
+                kpiData.forEach(kpi => {
+                    const container = document.createElement('div');
+                    container.className = 'p-4 border rounded-lg bg-gray-50';
+                    container.innerHTML = `<h4 class="font-bold text-center mb-2">${kpi.Code}: ${kpi['KPI Name_TH']}</h4><div style="height: ${selectedCities.length * 30 + 40}px;"><canvas></canvas></div>`;
+                    comparisonChartsContainer.appendChild(container);
+
+                    const datasets = [{ label: 'คะแนน', data: selectedCities.map(city => kpi[city]), backgroundColor: selectedCities.map((_, index) => chartColors[index % chartColors.length].replace('1)', '0.7)')) }];
+
+                    new Chart(container.querySelector('canvas').getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: selectedCities, datasets },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                    });
+                });
+            }
+
+            // Events & Init
+            summaryCategorySelect.addEventListener('change', updateSummaryCharts);
+            citySelectionContainer.addEventListener('change', updateRadarDashboard);
+            comparisonCitySelectionContainer.addEventListener('change', updateMultiCityComparison);
+            clearRadarSelectionBtn.addEventListener('click', () => { document.querySelectorAll('.radar-checkbox:checked').forEach(cb => cb.checked = false); updateRadarDashboard(); });
+            clearComparisonSelectionBtn.addEventListener('click', () => { document.querySelectorAll('.comparison-checkbox:checked').forEach(cb => cb.checked = false); updateMultiCityComparison(); });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                populateSelectors();
+                updateSummaryCharts();
+                const firstRadarCheckbox = document.querySelector('.radar-checkbox'); if (firstRadarCheckbox) firstRadarCheckbox.checked = true;
+                const comparisonCheckboxes = document.querySelectorAll('.comparison-checkbox'); if (comparisonCheckboxes.length > 1) { comparisonCheckboxes[0].checked = true; comparisonCheckboxes[1].checked = true; }
+                updateRadarDashboard();
+                updateMultiCityComparison();
+            });
+        })();
+    </script>
+</body>
+
+</html>
